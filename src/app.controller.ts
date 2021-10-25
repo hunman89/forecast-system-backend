@@ -1,17 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Controller, Get, Post } from '@nestjs/common';
+import { AxiosResponse } from 'axios';
+import { Observable } from 'rxjs';
 import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private configService: ConfigService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
-    const apiKey = this.configService.get<string>('KAMIS_API_KEY');
-    return this.appService.getHello(apiKey);
+  getHello(): Observable<AxiosResponse<any, any>> {
+    return this.appService.getHello();
   }
 }
