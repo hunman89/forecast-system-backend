@@ -45,13 +45,18 @@ export class AppService {
       data: { item },
     }: ResData = await got.post(url).json();
     const result = this.parseJSON(item);
-    return item;
+    return result;
   }
 
   parseJSON(items: Item[]): any {
+    const result: string[][] = [];
     items.forEach((item) => {
-      const array: [];
+      const month = item.regday.split('/')[0];
+      const day = item.regday.split('/')[1];
+      const date = `${item.yyyy}-${month}-${day}`;
+      const array = [date, item.price];
+      result.push(array);
     });
-    return null;
+    return result;
   }
 }
