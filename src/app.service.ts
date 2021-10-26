@@ -1,6 +1,8 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import got from 'got';
+
 import { AxiosResponse } from 'axios';
 import { map, Observable } from 'rxjs';
 import { Item, ResData } from './dtos/res-data.dto';
@@ -12,7 +14,7 @@ export class AppService {
     private httpService: HttpService,
   ) {}
 
-  async getHello(): Promise<Observable<Item[]>> {
+  async getHello(): Promise<Item[]> {
     // 인증 key
     const p_cert_key = this.configService.get<string>('KAMIS_API_KEY');
     // 요정자 id
@@ -39,10 +41,17 @@ export class AppService {
     const p_itemcode = '111';
     const url = `http://www.kamis.or.kr/service/price/xml.do?action=periodProductList&p_startday=${p_startday}&p_endday=${p_endday}&p_productclscode=${p_productclscode}&p_itemcategorycode=${p_itemcategorycode}&p_itemcode=${p_itemcode}&p_kindcode=${p_kindcode}&p_productrankcode=${p_productrankcode}&p_convert_kg_yn=${p_convert_kg_yn}&p_cert_key=${p_cert_key}&p_cert_id=${p_cert_id}&p_returntype=${p_returntype}`;
 
-    const data = this.httpService
-      .get(url)
-      .pipe(map((res: AxiosResponse<ResData>) => res.data.data.item));
+    const {
+      data: { item },
+    }: ResData = await got.post(url).json();
+    const result = this.parseJSON(item);
+    return item;
+  }
 
-    return data;
+  parseJSON(items: Item[]): any {
+    items.forEach((item) => {
+      const array: [];
+    });
+    return null;
   }
 }
