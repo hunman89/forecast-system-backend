@@ -7,6 +7,12 @@ import { AxiosResponse } from 'axios';
 import { map, Observable } from 'rxjs';
 import { Item, ResData } from './dtos/res-data.dto';
 
+export interface IChartData {
+  labels: string[];
+  data: number[];
+  predictedData: number[];
+}
+
 @Injectable()
 export class AppService {
   constructor(
@@ -14,7 +20,7 @@ export class AppService {
     private httpService: HttpService,
   ) {}
 
-  async getHello(): Promise<Item[]> {
+  async getData(): Promise<IChartData> {
     // 인증 key
     const p_cert_key = this.configService.get<string>('KAMIS_API_KEY');
     // 요정자 id
@@ -45,18 +51,28 @@ export class AppService {
       data: { item },
     }: ResData = await got.post(url).json();
     const result = this.parseJSON(item);
-    return result;
+    const predictedResult = this.predictData(result);
+    return predictedResult;
   }
 
-  parseJSON(items: Item[]): any {
-    const result: string[][] = [];
+  parseJSON(items: Item[]): IChartData {
+    const labels: string[] = [];
+    const data: number[] = [];
+    const predictedData: number[] = [];
     items.forEach((item) => {
       const month = item.regday.split('/')[0];
       const day = item.regday.split('/')[1];
       const date = `${item.yyyy}-${month}-${day}`;
-      const array = [date, item.price];
-      result.push(array);
+      const price = parseInt(item.price.replace(/,/g, ''));
+      labels.push(date);
+      data.push(price);
+      predictedData.push(NaN);
     });
-    return result;
+    const chartData: IChartData = { labels, data, predictedData };
+    return chartData;
+  }
+
+  predictData(chartData: IChartData): IChartData {
+    return chartData;
   }
 }
