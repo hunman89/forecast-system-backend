@@ -73,6 +73,19 @@ export class AppService {
   }
 
   predictData(chartData: IChartData): IChartData {
-    return chartData;
+    const length = chartData.labels.length;
+    const lastDay = new Date(Date.parse(chartData.labels[length - 1]));
+    const lastPrice = chartData.data[length - 1];
+    console.log(lastPrice);
+    for (let i = 0; i < 14; i++) {
+      lastDay.setDate(lastDay.getDate() + 1);
+      console.log(lastDay);
+      const day = `${lastDay.getFullYear()}-${lastDay.getMonth()}-${lastDay.getDate()}`;
+      chartData.labels.push(day);
+      chartData.data.push(NaN);
+      chartData.predictedData.push(lastPrice + 1000);
+    }
+
+    return predictedResult;
   }
 }
