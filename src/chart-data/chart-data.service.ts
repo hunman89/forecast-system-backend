@@ -2,18 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import got from 'got';
 import { Item, ResData } from './dtos/res-data.dto';
+import { ChartData } from './entities/chartData.entity';
 
-export interface IChartData {
-  labels: string[];
-  data: number[];
-  predictedData: number[];
-}
+let CHART_DATA: ChartData = null;
 
 @Injectable()
 export class ChartDataService {
   constructor(private configService: ConfigService) {}
 
-  async getData(): Promise<IChartData> {
+  async getData(): Promise<string> {
     // 인증 key
     const p_cert_key = this.configService.get<string>('KAMIS_API_KEY');
     // 요정자 id
@@ -44,39 +41,49 @@ export class ChartDataService {
       data: { item },
     }: ResData = await got.post(url).json();
     const result = this.parseJSON(item);
-    const predictedResult = this.predictData(result);
-    return predictedResult;
+    CHART_DATA = this.predictData(result);
+    return 'ok';
   }
 
-  parseJSON(items: Item[]): IChartData {
+  parseJSON(items: Item[]): ChartData {
     const labels: string[] = [];
-    const data: number[] = [];
+    const kamisData: number[] = [];
     const predictedData: number[] = [];
     items.forEach((item) => {
       const month = item.regday.split('/')[0];
       const day = item.regday.split('/')[1];
       const date = `${item.yyyy}-${month}-${day}`;
       const price = parseInt(item.price.replace(/,/g, ''));
+      if (!price) {
+        kamisData.push(null);
+      } else {
+        kamisData.push(price);
+      }
       labels.push(date);
-      data.push(price);
-      predictedData.push(NaN);
+      predictedData.push(null);
     });
-    const chartData: IChartData = { labels, data, predictedData };
+    const chartData: ChartData = { labels, kamisData, predictedData };
     return chartData;
   }
 
-  predictData(chartData: IChartData): IChartData {
+  predictData(chartData: ChartData): ChartData {
     const length = chartData.labels.length;
     const lastDay = new Date(Date.parse(chartData.labels[length - 1]));
-    const lastPrice = chartData.data[length - 1];
+    const lastPrice = chartData.kamisData[length - 1];
     for (let i = 0; i < 14; i++) {
       lastDay.setDate(lastDay.getDate() + 1);
       const day = `${lastDay.getFullYear()}-${lastDay.getMonth()}-${lastDay.getDate()}`;
       chartData.labels.push(day);
-      chartData.data.push(NaN);
+      chartData.kamisData.push(null);
       chartData.predictedData.push(lastPrice + 1000);
     }
-
     return chartData;
+  }
+
+  async chartData() {
+    if (!CHART_DATA) {
+      await this.getData();
+    }
+    return CHART_DATA;
   }
 }

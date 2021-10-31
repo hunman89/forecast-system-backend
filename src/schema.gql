@@ -1,0 +1,13 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type ChartData {
+  labels: [String!]!
+  kamisData: [Float]!
+  predictedData: [Float]!
+}
+
+type Query {
+  chartData: ChartData!
+}
