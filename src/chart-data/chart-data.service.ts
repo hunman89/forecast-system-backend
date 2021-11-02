@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import got from 'got';
@@ -10,9 +10,11 @@ let CHART_DATA: ChartData = null;
 @Injectable()
 export class ChartDataService {
   constructor(private configService: ConfigService) {}
+  private readonly logger = new Logger('ChartData');
 
   @Cron('0 0 9 * * *', { name: 'get data', timeZone: 'Asia/Seoul' })
   async getData(): Promise<string> {
+    this.logger.log('Start get data from kamis');
     // 인증 key
     const p_cert_key = this.configService.get<string>('KAMIS_API_KEY');
     // 요정자 id
@@ -42,8 +44,20 @@ export class ChartDataService {
     const {
       data: { item },
     }: ResData = await got.post(url).json();
+    if (!item) {
+      this.logger.error('Failed to get data from kamis');
+    }
+    this.logger.log('Success get data!');
     const result = this.parseJSON(item);
+    if (!result) {
+      this.logger.error('Failed to parse data');
+    }
+    this.logger.log('Success parse data!');
     CHART_DATA = this.predictData(result);
+    if (!CHART_DATA) {
+      this.logger.error('Failed to predict data');
+    }
+    this.logger.log('Success predict data!');
     return 'ok';
   }
 
@@ -92,6 +106,7 @@ export class ChartDataService {
 
   async chartData() {
     if (!CHART_DATA) {
+      this.logger.warn('There is no data! Try to get data...');
       await this.getData();
     }
     return CHART_DATA;
