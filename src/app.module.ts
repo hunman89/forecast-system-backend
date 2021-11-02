@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 import { ChartDataModule } from './chart-data/chart-data.module';
 
@@ -12,6 +13,7 @@ import { ChartDataModule } from './chart-data/chart-data.module';
       installSubscriptionHandlers: true,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
     }),
+    ScheduleModule.forRoot(),
     ChartDataModule,
   ],
   controllers: [],

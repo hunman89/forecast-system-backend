@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import got from 'got';
 import { Item, ResData } from './dtos/res-data.dto';
 import { ChartData } from './entities/chartData.entity';
@@ -10,6 +11,7 @@ let CHART_DATA: ChartData = null;
 export class ChartDataService {
   constructor(private configService: ConfigService) {}
 
+  @Cron('0 0 9 * * *', { name: 'get data', timeZone: 'Asia/Seoul' })
   async getData(): Promise<string> {
     // 인증 key
     const p_cert_key = this.configService.get<string>('KAMIS_API_KEY');
@@ -18,9 +20,9 @@ export class ChartDataService {
     // 리턴타입
     const p_returntype = 'json';
     // stert
-    const p_startday = '2020-01-01';
+    const p_startday = this.getPastDay(366);
     // end
-    const p_endday = '2021-01-01';
+    const p_endday = this.getPastDay(1);
     // 01:소매 02:도매
     const p_productclscode = '02';
     // 부류코드
@@ -43,6 +45,12 @@ export class ChartDataService {
     const result = this.parseJSON(item);
     CHART_DATA = this.predictData(result);
     return 'ok';
+  }
+
+  getPastDay(days: number): string {
+    const day = new Date(Date.now());
+    day.setDate(day.getDate() - days);
+    return `${day.getFullYear()}-${day.getMonth() + 1}-${day.getDate()}`;
   }
 
   parseJSON(items: Item[]): ChartData {
@@ -72,7 +80,9 @@ export class ChartDataService {
     const lastPrice = chartData.kamisData[length - 1];
     for (let i = 0; i < 14; i++) {
       lastDay.setDate(lastDay.getDate() + 1);
-      const day = `${lastDay.getFullYear()}-${lastDay.getMonth()}-${lastDay.getDate()}`;
+      const day = `${lastDay.getFullYear()}-${
+        lastDay.getMonth() + 1
+      }-${lastDay.getDate()}`;
       chartData.labels.push(day);
       chartData.kamisData.push(null);
       chartData.predictedData.push(lastPrice + 1000);
