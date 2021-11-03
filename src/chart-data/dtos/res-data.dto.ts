@@ -25,7 +25,7 @@ export interface Data {
 export interface Item {
   itemname: string[];
   kindname: string[];
-  countyname: string[];
+  countyname: string;
   marketname: string[];
   yyyy: string;
   regday: string;

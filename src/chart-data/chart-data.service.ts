@@ -34,12 +34,12 @@ export class ChartDataService {
     // 등급 코드
     const p_productrankcode = this.configService.get<string>('GRADE_CODE');
     //시군구 default = 전체
-    //const p_countycode = '1101';
+    const p_countrycode = '1101';
     // kg단위 환산여부 (y = 1kg 단위표시)
     const p_convert_kg_yn = 'N';
     //품목코드
     const p_itemcode = this.configService.get<string>('ITEM_CODE');
-    const url = `http://www.kamis.or.kr/service/price/xml.do?action=periodProductList&p_startday=${p_startday}&p_endday=${p_endday}&p_productclscode=${p_productclscode}&p_itemcategorycode=${p_itemcategorycode}&p_itemcode=${p_itemcode}&p_kindcode=${p_kindcode}&p_productrankcode=${p_productrankcode}&p_convert_kg_yn=${p_convert_kg_yn}&p_cert_key=${p_cert_key}&p_cert_id=${p_cert_id}&p_returntype=${p_returntype}`;
+    const url = `http://www.kamis.or.kr/service/price/xml.do?action=periodProductList&p_startday=${p_startday}&p_endday=${p_endday}&p_productclscode=${p_productclscode}&p_itemcategorycode=${p_itemcategorycode}&p_itemcode=${p_itemcode}&p_kindcode=${p_kindcode}&p_productrankcode=${p_productrankcode}&p_convert_kg_yn=${p_convert_kg_yn}&p_cert_key=${p_cert_key}&p_cert_id=${p_cert_id}&p_returntype=${p_returntype}&p_countrycode=${p_countrycode}`;
 
     const {
       data: { item },
@@ -72,17 +72,19 @@ export class ChartDataService {
     const kamisData: number[] = [];
     const predictedData: number[] = [];
     items.forEach((item) => {
-      const month = item.regday.split('/')[0];
-      const day = item.regday.split('/')[1];
-      const date = `${item.yyyy}-${month}-${day}`;
-      const price = parseInt(item.price.replace(/,/g, ''));
-      if (!price) {
-        kamisData.push(null);
-      } else {
-        kamisData.push(price);
+      if (item.countyname == '평균') {
+        const month = item.regday.split('/')[0];
+        const day = item.regday.split('/')[1];
+        const date = `${item.yyyy}-${month}-${day}`;
+        const price = parseInt(item.price.replace(/,/g, ''));
+        if (!price) {
+          kamisData.push(null);
+        } else {
+          kamisData.push(price);
+        }
+        labels.push(date);
+        predictedData.push(null);
       }
-      labels.push(date);
-      predictedData.push(null);
     });
     const chartData: ChartData = { labels, kamisData, predictedData };
     return chartData;
