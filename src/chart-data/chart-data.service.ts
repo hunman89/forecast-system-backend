@@ -46,17 +46,20 @@ export class ChartDataService {
 
     if (!item) {
       this.logger.error('Failed to get data from kamis');
+      throw new HttpException('BadRequest', HttpStatus.BAD_REQUEST);
     }
 
     this.logger.log('Success get data!');
     const result = this.parseJSON(item);
     if (!result) {
       this.logger.error('Failed to parse data');
+      return 'false';
     }
     this.logger.log('Success parse data!');
     CHART_DATA = this.predictData(result);
     if (!CHART_DATA) {
       this.logger.error('Failed to predict data');
+      return 'false';
     }
     this.logger.log('Success predict data!');
     return 'ok';
