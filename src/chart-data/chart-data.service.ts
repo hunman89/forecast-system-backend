@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import got from 'got';
@@ -40,13 +40,14 @@ export class ChartDataService {
     //품목코드
     const p_itemcode = this.configService.get<string>('ITEM_CODE');
     const url = `http://www.kamis.or.kr/service/price/xml.do?action=periodProductList&p_startday=${p_startday}&p_endday=${p_endday}&p_productclscode=${p_productclscode}&p_itemcategorycode=${p_itemcategorycode}&p_itemcode=${p_itemcode}&p_kindcode=${p_kindcode}&p_productrankcode=${p_productrankcode}&p_convert_kg_yn=${p_convert_kg_yn}&p_cert_key=${p_cert_key}&p_cert_id=${p_cert_id}&p_returntype=${p_returntype}&p_countrycode=${p_countrycode}`;
-
     const {
       data: { item },
     }: ResData = await got.post(url).json();
+
     if (!item) {
       this.logger.error('Failed to get data from kamis');
     }
+
     this.logger.log('Success get data!');
     const result = this.parseJSON(item);
     if (!result) {
@@ -64,7 +65,13 @@ export class ChartDataService {
   getPastDay(days: number): string {
     const day = new Date(Date.now());
     day.setDate(day.getDate() - days);
-    return `${day.getFullYear()}-${day.getMonth() + 1}-${day.getDate()}`;
+    const month: string =
+      day.getMonth() < 10
+        ? `0${day.getMonth() + 1}`
+        : (day.getMonth() + 1).toString();
+    const date: string =
+      day.getDate() < 10 ? `0${day.getDate()}` : day.getDate().toString();
+    return `${day.getFullYear()}-${month}-${date}`;
   }
 
   parseJSON(items: Item[]): ChartData {
